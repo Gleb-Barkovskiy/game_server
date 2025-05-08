@@ -78,6 +78,7 @@ jobs:
         poetry run alembic upgrade head
       env:
         DATABASE_URL: postgresql+asyncpg://testuser:testpassword@localhost:5432/testdb
+        PYTHONPATH: /home/runner/work/game_server/game_server
 
     - name: Run tests
       env:
@@ -87,5 +88,6 @@ jobs:
         JWT_ALGORITHM: HS256
         ACCESS_TOKEN_EXPIRE_MINUTES: 30
         LOCATION_LIST: '["location1", "location2"]'
+        PYTHONPATH: /home/runner/work/game_server/game_server
       run: |
         poetry run pytest -v --asyncio-mode=auto
