@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 from app.services.game import find_match
 
 settings = get_settings()
+print(settings.DATABASE_URL)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
