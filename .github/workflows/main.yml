@@ -51,14 +51,14 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libpq-dev
 
-    - name: Install Python dependencies
+    - name: Install Poetry
       run: |
         python -m pip install --upgrade pip
-        pip install pytest pytest-asyncio httpx async-asgi-testclient fastapi sqlalchemy asyncpg psycopg2-binary redis alembic pydantic-settings python-dotenv
+        pip install poetry
 
-    - name: Install project dependencies
+    - name: Install dependencies with Poetry
       run: |
-        pip install -r requirements.txt || true
+        poetry install --no-root --with dev
 
     - name: Wait for PostgreSQL to be ready
       run: |
@@ -75,7 +75,7 @@ jobs:
 
     - name: Apply migrations
       run: |
-        alembic upgrade head
+        poetry run alembic upgrade head
       env:
         DATABASE_URL: postgresql+asyncpg://testuser:testpassword@localhost:5432/testdb
 
@@ -86,6 +86,6 @@ jobs:
         JWT_SECRET_KEY: testsecret
         JWT_ALGORITHM: HS256
         ACCESS_TOKEN_EXPIRE_MINUTES: 30
-        LOCATION_LIST: '["Paris", "Tokyo Airport", "London Museum", "New York Subway", "Rome Colosseum", "Sydney Opera House"]'
+        LOCATION_LIST: '["location1", "location2"]'
       run: |
-        pytest -v --asyncio-mode=auto
+        poetry run pytest -v --asyncio-mode=auto
