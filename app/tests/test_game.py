@@ -60,7 +60,7 @@ async def test_room_websocket_connect(monkeypatch):
     monkeypatch.setattr("app.redis.redis_client.hset", AsyncMock())
     async with client.websocket_connect(f"/game/ws/room123?token={token}") as websocket:
         message = await websocket.receive_json()
-        assert message == {"type": "role", "role": "spy", "locations": ["location1", "location2"]}
+        assert message == {"type": "role", "role": "spy", "locations": ['Paris', 'Tokyo Airport', 'London Museum', 'New York Subway', 'Rome Colosseum', 'Sydney Opera House']}
 
 @pytest.mark.asyncio
 async def test_add_user_to_pool_new(mock_redis):
