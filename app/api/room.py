@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.redis import redis_client
 from app.services.auth import get_current_user
+from app.services.game import cleanup_room
 from typing import Dict
 import json
 
@@ -60,5 +61,5 @@ async def leave_room(room_id: str, current_user: Dict = Depends(get_current_user
                     "player": username
                 }))
             else:
-                await redis_client.delete(room_key)
+                await cleanup_room(room_id)
     return {"message": "Left room successfully"}

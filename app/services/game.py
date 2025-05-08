@@ -137,6 +137,7 @@ async def process_votes(room_id: str):
             "spy": spy
         }))
         await redis_client.hset(room_key, "status", "ended")
+        await cleanup_room(room_id)  # Clean up room and player assignments
     else:
         users.remove(voted_player)
 
@@ -157,6 +158,7 @@ async def process_votes(room_id: str):
                 "spy": spy
             }))
             await redis_client.hset(room_key, "status", "ended")
+            await cleanup_room(room_id)  # Clean up room and player assignments
         elif len(users) > 2:
             print(f"Starting new round in room {room_id} with remaining players: {users}")
             await start_turn(room_id, 0)
@@ -166,6 +168,7 @@ async def process_votes(room_id: str):
                 "spy": spy
             }))
             await redis_client.hset(room_key, "status", "ended")
+            await cleanup_room(room_id)  # Clean up room and player assignments
 
 
 async def voting_timeout(room_id: str):
@@ -188,3 +191,27 @@ async def game_timeout(room_id: str):
             "spy": spy
         }))
         await redis_client.hset(room_key, "status", "ended")
+        await cleanup_room(room_id)  # Clean up room and player assignments
+
+
+async def cleanup_room(room_id: str):
+    room_key = f"room:{room_id}"
+    room_data = await redis_client.hgetall(room_key)
+    if not room_data:
+        print(f"Room {room_id} not found during cleanup")
+        return
+
+    users = room_data[b"users"].decode().split(",")
+
+    await redis_client.delete(room_key)
+    await redis_client.delete(f"room:{room_id}:connected")
+
+    for user in users:
+        await redis_client.delete(f"assigned_room:{user}")
+
+    await redis_client.publish(f"room_channel:{room_id}", json.dumps({
+        "type": "room_closed",
+        "message": "The game has ended and the room has been closed."
+    }))
+
+    print(f"Cleaned up room {room_id} and freed users: {users}")
