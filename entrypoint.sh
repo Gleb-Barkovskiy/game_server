@@ -3,7 +3,7 @@ set -e
 
 # Wait for PostgreSQL to be ready
 echo "Waiting for PostgreSQL to be ready..."
-until pg_isready -h db -p 5432 -U gameuser -d gamedb; do
+until pg_isready -h db-1 -p 5432 -U gameuser -d gamedb; do
   echo "PostgreSQL is not ready yet, waiting..."
   sleep 2
 done
