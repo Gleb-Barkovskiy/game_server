@@ -79,7 +79,7 @@ async def test_add_user_to_pool_existing_room(mock_redis):
 async def test_find_match(mock_redis, monkeypatch):
     mock_redis.scard.return_value = 3
     mock_redis.srandmember.return_value = [b"testuser", b"user2", b"user3"]
-    monkeypatch.setattr("app.services.game_service.random.choice", lambda x: x[0])
+    monkeypatch.setattr("app.services.game.random.choice", lambda x: x[0])
     await find_match()
     mock_redis.hset.assert_called()
     mock_redis.publish.assert_called()
