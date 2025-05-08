@@ -11,7 +11,7 @@ from app.redis import redis_client
 
 @pytest_asyncio.fixture
 async def client():
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(base_url="http://test") as client:
         yield client
 
 @pytest_asyncio.fixture

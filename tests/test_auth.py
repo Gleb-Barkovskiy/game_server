@@ -12,7 +12,7 @@ async def auth_headers(test_user):
 @pytest.mark.asyncio
 async def test_register_user(client: AsyncClient, override_get_db):
     user_data = UserCreate(username="newuser", email="new@example.com", password="password123")
-    response = await client.post("/auth/register", json=user_data.dict())
+    response = await client.post("/auth/register", json=user_data.model_dump())
     assert response.status_code == 200
     data = response.json()
     assert data["username"] == "newuser"
@@ -21,18 +21,18 @@ async def test_register_user(client: AsyncClient, override_get_db):
 @pytest.mark.asyncio
 async def test_register_duplicate_user(client: AsyncClient, override_get_db, test_user):
     user_data = UserCreate(username="testuser", email="new@example.com", password="password123")
-    response = await client.post("/auth/register", json=user_data.dict())
+    response = await client.post("/auth/register", json=user_data.model_dump())
     assert response.status_code == 400
     assert response.json()["detail"] == "Username exists"
 
 @pytest.mark.asyncio
 async def test_login_user(client: AsyncClient, override_get_db, test_user, monkeypatch):
-    async def mock_verify_password(plain, hashed):
+    async def mock_verify_password():
         return True
     monkeypatch.setattr("app.services.auth.verify_password", mock_verify_password)
 
     login_data = UserLogin(username="testuser", password="password123")
-    response = await client.post("/auth/login", json=login_data.dict())
+    response = await client.post("/auth/login", json=login_data.model_dump())
     assert response.status_code == 200
     data = response.json()
     assert data["username"] == "testuser"
@@ -40,11 +40,11 @@ async def test_login_user(client: AsyncClient, override_get_db, test_user, monke
 
 @pytest.mark.asyncio
 async def test_login_invalid_credentials(client: AsyncClient, override_get_db, test_user, monkeypatch):
-    async def mock_verify_password(plain, hashed):
+    async def mock_verify_password():
         return False
     monkeypatch.setattr("app.services.auth.verify_password", mock_verify_password)
 
     login_data = UserLogin(username="testuser", password="wrongpassword")
-    response = await client.post("/auth/login", json=login_data.dict())
+    response = await client.post("/auth/login", json=login_data.model_dump())
     assert response.status_code == 400
     assert response.json()["detail"] == "Invalid credentials"
