@@ -1,16 +1,23 @@
 from unittest.mock import AsyncMock, MagicMock
-
 import pytest_asyncio
-from httpx import AsyncClient
+from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.database import engine
+from app.database import engine, get_db
 from app.main import app
 from app.redis import redis_client
+import alembic.command
+import alembic.config
+
+@pytest_asyncio.fixture(scope="session")
+async def setup_database():
+    alembic_cfg = alembic.config.Config("./alembic.ini")
+    alembic.command.upgrade(alembic_cfg, "head")
+    yield
+    alembic.command.downgrade(alembic_cfg, "base")
 
 @pytest_asyncio.fixture
-async def client():
-    async with AsyncClient(base_url="http://test") as client:
+def client(setup_database):
+    with TestClient(app) as client:
         yield client
 
 @pytest_asyncio.fixture
@@ -29,7 +36,6 @@ async def mock_redis():
     redis_client.publish = mock.publish
     redis_client.expire = mock.expire
 
-    # Mock pubsub
     pubsub_mock = AsyncMock()
     pubsub_mock.subscribe = AsyncMock()
     pubsub_mock.listen = AsyncMock(return_value=[{"type": "message", "data": b'{"type": "test"}'}])
@@ -48,7 +54,7 @@ async def db_session():
 async def override_get_db(db_session):
     async def _get_db():
         yield db_session
-    app.dependency_overrides[app.get_db] = _get_db
+    app.dependency_overrides[get_db] = _get_db
     yield
     app.dependency_overrides.clear()
 
